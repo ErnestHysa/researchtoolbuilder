@@ -338,5 +338,3 @@ You can:
 - Settings are stored under `advancedResearchTool.settings.v1` in `localStorage`.
 
 ---
-
-If you’d like, I can add a short “FAQ” or “Troubleshooting” section tailored to your deployment environment.
