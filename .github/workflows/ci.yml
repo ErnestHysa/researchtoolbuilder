@@ -1,0 +1,84 @@
+name: Static Site CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node (if build tools exist)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+        if: ${{ hashFiles('package-lock.json', 'pnpm-lock.yaml', 'yarn.lock') != '' }}
+
+      - name: Install dependencies
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: npm ci
+      - name: Install dependencies (yarn)
+        if: ${{ hashFiles('yarn.lock') != '' }}
+        run: yarn install --frozen-lockfile
+      - name: Install dependencies (pnpm)
+        if: ${{ hashFiles('pnpm-lock.yaml') != '' }}
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Build site (npm)
+        if: ${{ hashFiles('package-lock.json') != '' && (hashFiles('package.json') != '' ) }}
+        run: |
+          if jq -e '.scripts.build' package.json > /dev/null 2>&1; then
+            npm run build
+          else
+            echo "No build script found, skipping build."
+          fi
+      - name: Build site (yarn)
+        if: ${{ hashFiles('yarn.lock') != '' && (hashFiles('package.json') != '' ) }}
+        run: |
+          if jq -e '.scripts.build' package.json > /dev/null 2>&1; then
+            yarn build
+          else
+            echo "No build script found, skipping build."
+          fi
+      - name: Build site (pnpm)
+        if: ${{ hashFiles('pnpm-lock.yaml') != '' && (hashFiles('package.json') != '' ) }}
+        run: |
+          if jq -e '.scripts.build' package.json > /dev/null 2>&1; then
+            pnpm build
+          else
+            echo "No build script found, skipping build."
+          fi
+
+      - name: Validate HTML (if public folder exists)
+        if: ${{ hashFiles('public/**', 'dist/**', 'build/**') != '' }}
+        uses: Cyb3r-Jak3/html5validator-action@v7
+        with:
+          root: |
+            public
+            dist
+            build
+          blacklist: node_modules
+
+      - name: Run basic link check (optional)
+        if: ${{ hashFiles('public/**', 'dist/**', 'build/**') != '' }}
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >
+            --verbose
+            --no-progress
+            --accept 200..399
+            ./public ./dist ./build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Finish
+        run: echo "Static site validation completed."
