@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Research Tool</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="app-header-inner">
+            <div class="brand" aria-label="Advanced Research Tool">
+                <div class="brand-logo" aria-hidden="true">R</div>
+                <div class="brand-text">
+                    <div class="brand-title">Advanced Research Tool</div>
+                    <div class="brand-subtitle">Multi-phase LLM-powered research workflow</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="pill-label" aria-hidden="true">Local-only, single-file client</span>
+                <button type="button" class="header-icon-btn" id="docsButton">
+                    <span aria-hidden="true">❓</span>
+                    <span>Docs & Flow</span>
+                </button>
+                <button type="button" class="header-icon-btn" id="themeToggleButton">
+                    <span aria-hidden="true">🌓</span>
+                    <span id="themeToggleLabel">Theme</span>
+                </button>
+                <button type="button" class="header-primary-btn" id="settingsButton" aria-haspopup="dialog" aria-expanded="false">
+                    <span aria-hidden="true">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="layout-shell">
+            <!-- Left: Configure & Run -->
+            <section class="step-panel" aria-label="Configure and start research">
+                <div class="step-panel-header">
+                    <div class="step-label">Step 1</div>
+                    <div class="step-title">Configure your run</div>
+                </div>
+                <p class="step-subtitle">
+                    Provide your API key, select a model, define your research topic, and choose depth & coverage.
+                </p>
+                <div class="step-bullets">
+                    <div>• Uses OpenRouter Chat Completions API directly from your browser.</div>
+                    <div>• No backend. Your key stays local. Settings persist via localStorage.</div>
+                </div>
+
+                <div class="status-strip" aria-live="polite">
+                    <span class="status-badge">Flow</span>
+                    <span><strong>1.</strong> Configure &nbsp; <strong>2.</strong> Define topic &nbsp; <strong>3.</strong> Run workflow &nbsp; <strong>4.</strong> Review & export</span>
+                </div>
+
+                <form id="researchForm" aria-label="Research configuration form">
+                    <div class="form-group">
+                        <label for="apiKey">
+                            <span class="label-step">Secure</span>
+                            OpenRouter API Key
+                        </label>
+                        <input
+                            type="password"
+                            id="apiKey"
+                            name="apiKey"
+                            placeholder="Enter your OpenRouter API key (stored only in this browser if enabled in Settings)"
+                            autocomplete="off"
+                            required
+                            aria-required="true"
+                        >
+                        <div class="helper-text">
+                            Used only for direct calls to OpenRouter. You can persist it locally via Settings if desired.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelId">
+                            <span class="label-step">Model</span>
+                            Primary model
+                        </label>
+                        <select id="modelId" name="modelId" required aria-required="true">
+                            <option value="">Select a model...</option>
+                            <option value="anthropic/claude-3.5-sonnet">Anthropic Claude 3.5 Sonnet</option>
+                            <option value="anthropic/claude-3-opus">Anthropic Claude 3 Opus</option>
+                            <option value="openai/gpt-4.1">OpenAI GPT-4.1</option>
+                            <option value="openai/gpt-4.1-mini">OpenAI GPT-4.1 Mini</option>
+                            <option value="google/gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+                            <option value="cohere/command-r-plus">Cohere Command R+</option>
+                            <option value="mistral/mistral-large-latest">Mistral Large (Latest)</option>
+                            <option value="x-ai/grok-beta">xAI Grok Beta</option>
+                            <option value="custom">Custom Model (enter below)</option>
+                        </select>
+                        <div class="helper-text">
+                            Pick a model with strong long-context & reasoning. Default can be set in Settings.
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="customModelGroup" style="display: none;">
+                        <label for="customModel">Custom model ID</label>
+                        <input
+                            type="text"
+                            id="customModel"
+                            name="customModel"
+                            placeholder="e.g. your-provider/your-model"
+                            inputmode="text"
+                        >
+                        <div class="helper-text">
+                            Ensure the model is supported by your OpenRouter account.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="topic">
+                            <span class="label-step">Step 2</span>
+                            Research Topic / Question
+                        </label>
+                        <textarea
+                            id="topic"
+                            name="topic"
+                            placeholder="Describe your research topic clearly: context, scope, goals, constraints, audiences, and what a 'good' answer must include."
+                            required
+                            aria-required="true"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="depth">Research depth</label>
+                        <select id="depth" name="depth">
+                            <option value="normal">Normal – Balanced, concise research</option>
+                            <option value="advanced">Advanced – Deeper analysis with multiple perspectives</option>
+                            <option value="extreme" selected>Extreme – Comprehensive, multi-phase research</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="iterations">Perspective coverage</label>
+                        <select id="iterations" name="iterations">
+                            <option value="3">3 perspectives (Balanced)</option>
+                            <option value="5">5 perspectives (Thorough)</option>
+                            <option value="7">7 perspectives (Very deep)</option>
+                        </select>
+                        <div class="helper-text">
+                            Controls how many perspectives are deeply explored. Default can be tuned in Settings.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="constraints">
+                            Optional constraints & prompt add-ons
+                        </label>
+                        <textarea
+                            id="constraints"
+                            name="constraints"
+                            placeholder="Optional: add domain constraints, required sources, formatting rules, or viewpoints to always include. Saved as part of your defaults."
+                        ></textarea>
+                    </div>
+
+                    <div class="actions-row">
+                        <button type="submit" class="btn btn-primary" id="startResearch">
+                            <span class="icon" aria-hidden="true">🚀</span>
+                            <span>Run Advanced Research</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="openSettingsFromForm">
+                            <span aria-hidden="true">⚙️</span>
+                            <span>Adjust Defaults</span>
+                        </button>
+                        <span class="hint">
+                            Uses a 4-phase pipeline: analysis, perspectives, deep dives, synthesis. Only critical fields lock during execution.
+                        </span>
+                    </div>
+                </form>
+
+                <div class="error" id="errorMessage" role="alert"></div>
+                <div class="success" id="successMessage" role="status"></div>
+
+                <section class="progress" id="progressContainer" aria-label="Research progress">
+                    <div class="progress-bar" aria-hidden="true">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Awaiting input...</div>
+                    <div class="phase-indicator">
+                        <div class="phase-dot"></div>
+                        <div id="statusPhase">Idle</div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Center: Results -->
+            <section class="card" id="resultsCard" aria-label="Research output">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <span class="icon" aria-hidden="true">📊</span>
+                            <span>Research Results</span>
+                        </div>
+                        <div class="card-subtitle">
+                            Structured outputs for each phase of the workflow.
+                        </div>
+                    </div>
+                    <div class="export-wrapper">
+                        <button
+                            class="btn btn-secondary btn-ghost export-menu-toggle"
+                            id="exportToggle"
+                            type="button"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="exportMenu"
+                        >
+                            <span aria-hidden="true">📥</span>
+                            <span>Export</span>
+                        </button>
+                        <div
+                            class="export-menu"
+                            id="exportMenu"
+                            role="menu"
+                            aria-label="Export results options"
+                        >
+                            <button type="button" id="exportTxt" role="menuitem">
+                                <span aria-hidden="true">📄</span>
+                                <span>Download as .txt</span>
+                            </button>
+                            <button type="button" id="exportPdf" role="menuitem">
+                                <span aria-hidden="true">📝</span>
+                                <span>Download as .pdf</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="results" id="resultsContainer" aria-live="polite">
+                    <article class="research-section" aria-labelledby="topic-analysis-heading">
+                        <h3 id="topic-analysis-heading">
+                            <span aria-hidden="true">📋</span>
+                            <span>Topic Analysis</span>
+                        </h3>
+                        <div id="topicAnalysis" class="research-section-content"></div>
+                    </article>
+
+                    <article class="research-section" aria-labelledby="perspectives-heading">
+                        <h3 id="perspectives-heading">
+                            <span aria-hidden="true">🔍</span>
+                            <span>Research Perspectives</span>
+                        </h3>
+                        <div id="perspectives" class="research-section-content"></div>
+                    </article>
+
+                    <article class="research-section" aria-labelledby="deep-research-heading">
+                        <h3 id="deep-research-heading">
+                            <span aria-hidden="true">🔬</span>
+                            <span>Deep Research Findings</span>
+                        </h3>
+                        <div id="deepResearch" class="research-section-content"></div>
+                    </article>
+
+                    <article class="research-section" aria-labelledby="synthesis-heading">
+                        <h3 id="synthesis-heading">
+                            <span aria-hidden="true">📈</span>
+                            <span>Synthesis & Conclusions</span>
+                        </h3>
+                        <div id="synthesis" class="research-section-content"></div>
+                    </article>
+
+                    <article class="research-section" aria-labelledby="log-heading">
+                        <h3 id="log-heading">
+                            <span aria-hidden="true">📋</span>
+                            <span>Research Log</span>
+                        </h3>
+                        <div class="log-container" id="researchLog" aria-live="polite"></div>
+                    </article>
+                </section>
+            </section>
+
+            <!-- Right: Guidance & phases -->
+            <aside class="side-panel" aria-label="Guidance and workflow summary">
+                <section class="side-card">
+                    <h3>Workflow Overview</h3>
+                    <p>Understand how each phase contributes to a robust research output.</p>
+                    <ul class="steps-list">
+                        <li>
+                            <span class="step-index">1</span>
+                            <div>
+                                <strong>Analyze</strong> your topic to extract subproblems, complexity, and gaps.
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-index">2</span>
+                            <div>
+                                <strong>Generate perspectives</strong> that are distinct, methodologically solid, and high-yield.
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-index">3</span>
+                            <div>
+                                <strong>Run deep dives</strong> per perspective with critical review and gap mapping.
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-index">4</span>
+                            <div>
+                                <strong>Synthesize</strong> into an integrated, decision-ready research report.
+                            </div>
+                        </li>
+                    </ul>
+                    <details class="meta">
+                        <summary>Technical notes</summary>
+                        <p>
+                            All calls use the OpenRouter Chat Completions API. Errors and partial failures are surfaced
+                            in the log and inlined inside results for transparency.
+                        </p>
+                    </details>
+                </section>
+
+                <section class="side-card">
+                    <h3>Usage Hints</h3>
+                    <p>
+                        For production-grade outputs:
+                    </p>
+                    <ul class="steps-list">
+                        <li>
+                            <span class="step-index">A</span>
+                            <div>Be explicit about domain, timeframe, and what to avoid (e.g., generic advice).</div>
+                        </li>
+                        <li>
+                            <span class="step-index">B</span>
+                            <div>Use “Constraints & addons” for citation style, tone, or bias mitigation.</div>
+                        </li>
+                        <li>
+                            <span class="step-index">C</span>
+                            <div>Start with 3–5 perspectives; go deeper as needed.</div>
+                        </li>
+                    </ul>
+                    <p class="hint">
+                        Defaults, theme, density, and persistence of your key can be tuned in <strong>Settings</strong>.
+                    </p>
+                </section>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<!-- Settings Drawer -->
+<div class="settings-drawer-backdrop" id="settingsBackdrop"></div>
+<aside
+    class="settings-drawer"
+    id="settingsDrawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settingsTitle"
+>
+    <div class="settings-header">
+        <div class="settings-title-row">
+            <div class="settings-title">
+                <span aria-hidden="true">⚙️</span>
+                <span id="settingsTitle">Run & UI Settings</span>
+            </div>
+            <button class="settings-close-btn" id="settingsClose" aria-label="Close settings">
+                ✕
+            </button>
+        </div>
+        <div class="settings-subtitle">
+            Preferences persist in your browser under a single namespaced key. No data is sent anywhere.
+        </div>
+    </div>
+    <div class="settings-body">
+        <div class="settings-section-label">
+            <span aria-hidden="true">●</span> Defaults
+        </div>
+        <div class="settings-group">
+            <label for="settingsApiKey">
+                Default API key
+            </label>
+            <input
+                type="password"
+                id="settingsApiKey"
+                class="settings-input"
+                placeholder="Optionally store your OpenRouter key locally"
+                autocomplete="off"
+            >
+            <div class="settings-note">
+                Stored locally only if you provide it here. Useful for frequent usage on a trusted machine.
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <label for="settingsModel">
+                Default model
+            </label>
+            <select id="settingsModel" class="settings-select">
+                <option value="">Use last chosen</option>
+                <option value="anthropic/claude-3.5-sonnet">Anthropic Claude 3.5 Sonnet</option>
+                <option value="anthropic/claude-3-opus">Anthropic Claude 3 Opus</option>
+                <option value="openai/gpt-4.1">OpenAI GPT-4.1</option>
+                <option value="openai/gpt-4.1-mini">OpenAI GPT-4.1 Mini</option>
+                <option value="google/gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+                <option value="cohere/command-r-plus">Cohere Command R+</option>
+                <option value="mistral/mistral-large-latest">Mistral Large (Latest)</option>
+                <option value="x-ai/grok-beta">xAI Grok Beta</option>
+                <option value="custom">Custom model (see below)</option>
+            </select>
+            <label for="settingsCustomModel">Custom default model ID</label>
+            <input
+                type="text"
+                id="settingsCustomModel"
+                class="settings-input"
+                placeholder="provider/model (used when 'Custom model' is selected)"
+            >
+        </div>
+
+        <div class="settings-group">
+            <label for="settingsIterations">
+                Default iterations
+            </label>
+            <select id="settingsIterations" class="settings-select">
+                <option value="">Use last chosen</option>
+                <option value="3">3 perspectives</option>
+                <option value="5">5 perspectives</option>
+                <option value="7">7 perspectives</option>
+            </select>
+            <label for="settingsConstraints">
+                Default constraints / addons
+            </label>
+            <textarea
+                id="settingsConstraints"
+                class="settings-textarea"
+                rows="3"
+                placeholder="Optional: default methodological constraints, styles, or domain hints to always include."
+            ></textarea>
+        </div>
+
+        <div class="settings-section-label">
+            <span aria-hidden="true">●</span> Appearance & UX
+        </div>
+        <div class="settings-group">
+            <div class="toggle-row">
+                <div class="toggle-label-text">
+                    Dark theme
+                    <div class="settings-note">Switch between light and dark UI.</div>
+                </div>
+                <div class="toggle-switch" id="toggleDarkTheme" data-on="false" role="switch" aria-checked="false" tabindex="0">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-label-text">
+                    Compact layout
+                    <div class="settings-note">Reduce paddings for higher information density.</div>
+                </div>
+                <div class="toggle-switch" id="toggleCompact" data-on="false" role="switch" aria-checked="false" tabindex="0">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-label-text">
+                    Reduced motion
+                    <div class="settings-note">Minimize transitions for motion sensitivity.</div>
+                </div>
+                <div class="toggle-switch" id="toggleReducedMotion" data-on="false" role="switch" aria-checked="false" tabindex="0">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="settings-footer">
+        <button class="btn btn-secondary" id="settingsReset" type="button">
+            Reset to defaults
+        </button>
+        <button class="btn btn-primary" id="settingsSave" type="button">
+            Save & Apply
+        </button>
+    </div>
+</aside>
+
+<div id="statusLiveRegion" aria-live="polite"></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
+
