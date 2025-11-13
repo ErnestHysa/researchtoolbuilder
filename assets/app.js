@@ -1005,8 +1005,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const safePerspectives = escapeHtml((perspectivesDiv.textContent || '').trim());
         const safeDeep = escapeHtml((deepResearchDiv.textContent || '').trim());
         const safeSynthesis = escapeHtml((synthesisDiv.textContent || '').trim());
-        const safeLog = escapeHtml((researchLogDiv.textContent || '').trim());
-
         const html = `
 <!DOCTYPE html>
 <html>
@@ -1091,12 +1089,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="section">
         <h2>4. Synthesis & Conclusions</h2>
         <pre>${safeSynthesis}</pre>
-    </div>` : ''}
-
-    ${safeLog ? `
-    <div class="section">
-        <h2>5. Research Log (Execution Trace)</h2>
-        <pre>${safeLog}</pre>
     </div>` : ''}
 
 </body>
@@ -1228,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const topicTitle = (topicInput.value || '').trim();
         if (topicTitle) {
-            parts.push(`=== Topic ===`);
+            parts.push('=== Topic ===');
             parts.push(topicTitle);
             parts.push('');
         }
@@ -1261,12 +1253,8 @@ document.addEventListener('DOMContentLoaded', () => {
             parts.push('');
         }
 
-        const logText = (researchLogDiv.textContent || '').trim();
-        if (logText) {
-            parts.push('=== Research Log ===');
-            parts.push(logText);
-        }
-
+        // Intentionally do NOT include researchLogDiv contents in exports.
+        // Exports are limited to structured research outputs only.
         return parts.join('\n');
     }
 
